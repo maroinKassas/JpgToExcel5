@@ -14,7 +14,8 @@
         <ImageView
             android:id="@+id/image_view"
             android:layout_width="match_parent"
-            android:layout_height="300dp"
+            android:layout_height="wrap_content"
+            android:minHeight="300dp"
             android:layout_weight="0"/>
 
         <LinearLayout
@@ -34,12 +35,6 @@
                 android:layout_height="wrap_content"
                 android:text="Galerie"
                 android:layout_margin="8dp"/>
-            <Button
-                android:id="@+id/scan"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Scan"
-                android:layout_margin="6dp"/>
         </LinearLayout>
         <ScrollView
             android:layout_width="match_parent"

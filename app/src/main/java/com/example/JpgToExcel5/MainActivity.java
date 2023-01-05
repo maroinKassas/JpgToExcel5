@@ -25,15 +25,12 @@ import com.googlecode.tesseract.android.BuildConfig;
 import com.googlecode.tesseract.android.TessBaseAPI;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TESS_DATA = "/tessdata";
+    //private static final String TESS_DATA = "/tessdata";
 
     private ActivityResultLauncher activityResultLauncher;
     private ActivityResultLauncher<String> activityOpenImage;
@@ -51,27 +48,35 @@ public class MainActivity extends AppCompatActivity {
 
         activityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if (result.getResultCode() == RESULT_OK) {
-                preCooking();
+                try {
+                    loadAndScan();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
         activityOpenImage = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (uri != null) {
                 photoUri = uri;
-                preCooking();
+                try {
+                    loadAndScan();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
         ((Button)findViewById(R.id.camera)).setOnClickListener(v -> {
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            int n = 0;
-            while(n < 2){
+            int attempt = 0;
+            while(attempt < 2){
                 File file = null;
                 try {
-                    if (n == 0) {
-                        file = createImageFile();
+                    if (attempt == 0) {
+                        file = createImageFileContext();
                     } else {
-                        file = createImageFile2();
+                        file = createImageFileEnvironment();
                     }
                 } catch (IOException e) {
                     makeToast("Failed make file : " + e);
@@ -80,55 +85,55 @@ public class MainActivity extends AppCompatActivity {
                 if (file != null) {
                     photoUri = FileProvider.getUriForFile(Objects.requireNonNull(getApplicationContext()), BuildConfig.APPLICATION_ID + ".provider", file);
 
-                    intent.putExtra(MediaStore.EXTRA_OUTPUT,photoUri);
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
                 }
                 if (intent.resolveActivity(getPackageManager()) != null) {
                     activityResultLauncher.launch(intent);
                     break;
                 }
-                n++;
+                attempt++;
             }
         });
 
         ((Button)findViewById(R.id.galerie)).setOnClickListener(v -> activityOpenImage.launch("image/*"));
 
-        ((Button)findViewById(R.id.scan)).setOnClickListener(v -> letCooking());
-
         checkPermission();
-        prepareTessData();
+        //prepareTessData();
     }
 
     private void updateInformation(String str) {
         ((TextView) findViewById(R.id.information)).setText(str);
     }
 
-    private void letCooking() {
-        if(bitmap != null){
-            updateInformation("Scanning..");
-            new Thread(() -> {
-                String textImage = getText(bitmap);
-                runOnUiThread(() -> updateInformation(textImage));
-            }).start();
-        }else {
-            updateInformation("Bitmap is empty!");
-        }
-    }
-
-    private void preCooking() {
-        if (photoUri != null){
-
-            updateInformation("Please wait");
-
-            bitmap = grabImage(photoUri);
-            imageView.setImageBitmap(bitmap);
-
-            new Thread(() -> runOnUiThread(() -> {
-                imageView.setImageBitmap(bitmap);
-                updateInformation("Ready to scan");
-            })).start();
-        } else {
+    private void loadAndScan() throws InterruptedException {
+        if (photoUri == null){
             makeToast("Uri is Null");
+            return;
         }
+
+        updateInformation("Please wait");
+
+        bitmap = grabImage(photoUri);
+        imageView.setImageBitmap(bitmap);
+
+        Thread loadImage = new Thread(() -> runOnUiThread(() -> {
+            imageView.setImageBitmap(bitmap);
+            updateInformation("Loading...");
+        }));
+        loadImage.start();
+
+        if(bitmap == null){
+            updateInformation("Bitmap is empty!");
+            return;
+        }
+
+        loadImage.join();
+        updateInformation("Scanning..");
+        Thread scanImage = new Thread(() -> {
+            String textImage = getText(bitmap);
+            runOnUiThread(() -> updateInformation(textImage));
+        });
+        scanImage.start();
     }
 
     private void makeToast(String txt) {
@@ -147,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void prepareTessData() {
+    /*private void prepareTessData() {
         try {
             File dir = getExternalFilesDir(TESS_DATA);
             if (!dir.exists()) {
@@ -180,14 +185,14 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             makeToast("Error :" + e.getMessage());
         }
-    }
+    }*/
 
-    private File createImageFile() throws IOException {
+    private File createImageFileContext() throws IOException {
         File storageDir = getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         return new File(storageDir, "timeStamp.jpg");
     }
 
-    private File createImageFile2() throws IOException {
+    private File createImageFileEnvironment() throws IOException {
         File storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
         return new File(storageDir,"timeStamp.jpg");
     }
