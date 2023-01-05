@@ -29,10 +29,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int REQUEST_CAMERA = 0;
     private static final String TESS_DATA = "/tessdata";
 
     private ActivityResultLauncher activityResultLauncher;
@@ -76,8 +76,9 @@ public class MainActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     makeToast("Failed make file : " + e);
                 }
+
                 if (file != null) {
-                    photoUri = FileProvider.getUriForFile(getApplicationContext(), BuildConfig.APPLICATION_ID + "." + getLocalClassName() + ".provider", file);
+                    photoUri = FileProvider.getUriForFile(Objects.requireNonNull(getApplicationContext()), BuildConfig.APPLICATION_ID + ".provider", file);
 
                     intent.putExtra(MediaStore.EXTRA_OUTPUT,photoUri);
                 }
