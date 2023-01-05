@@ -101,8 +101,16 @@ public class MainActivity extends AppCompatActivity {
         //prepareTessData();
     }
 
-    private void updateInformation(String str) {
-        ((TextView) findViewById(R.id.information)).setText(str);
+    private void checkPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)== PackageManager.PERMISSION_DENIED) {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[] {Manifest.permission.CAMERA}, 120);
+        }
+        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 121);
+        }
+        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 122);
+        }
     }
 
     private void loadAndScan() throws InterruptedException {
@@ -136,20 +144,12 @@ public class MainActivity extends AppCompatActivity {
         scanImage.start();
     }
 
-    private void makeToast(String txt) {
-        Toast.makeText(MainActivity.this, txt,Toast.LENGTH_SHORT).show();
+    private void updateInformation(String str) {
+        ((TextView) findViewById(R.id.information)).setText(str);
     }
 
-    private void checkPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)== PackageManager.PERMISSION_DENIED) {
-            ActivityCompat.requestPermissions(MainActivity.this, new String[] {Manifest.permission.CAMERA}, 120);
-        }
-        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 121);
-        }
-        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 122);
-        }
+    private void makeToast(String txt) {
+        Toast.makeText(MainActivity.this, txt,Toast.LENGTH_SHORT).show();
     }
 
     /*private void prepareTessData() {
@@ -196,7 +196,6 @@ public class MainActivity extends AppCompatActivity {
         File storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
         return new File(storageDir,"timeStamp.jpg");
     }
-
 
     private String getText(Bitmap bitmap) {
         try {
